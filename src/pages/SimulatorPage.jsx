@@ -16,7 +16,7 @@ import { getProducts, saveQuote, formatCOP, formatPercent } from '../utils/stora
 import { calculateFinancials } from '../utils/calculator';
 
 const SimulatorPage = ({ initialProductId }) => {
-    const products = getProducts();
+    const [products, setProducts] = useState(() => getProducts()); // Load once
 
     const [selectedProductId, setSelectedProductId] = useState(initialProductId || products[0]?.id);
     const [quantity, setQuantity] = useState(50);

@@ -5,15 +5,18 @@ import {
     Calculator,
     FileText,
     TrendingUp,
-    DollarSign // Added
+    DollarSign,
+    Sparkles // Added
 } from 'lucide-react';
 
 const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'studio', label: 'The Studio', icon: Sparkles }, // Added
     { id: 'products', label: 'Productos', icon: Package },
-    { id: 'finance', label: 'Finanzas', icon: DollarSign }, // Added
     { id: 'simulator', label: 'Simulador', icon: Calculator },
     { id: 'quotes', label: 'Cotizaciones', icon: FileText },
+    { type: 'divider' },
+    { id: 'finance', label: 'Finanzas & Negocio', icon: DollarSign },
 ];
 
 const Sidebar = ({ currentPage, onNavigate }) => {
@@ -34,7 +37,11 @@ const Sidebar = ({ currentPage, onNavigate }) => {
 
             {/* Navigation */}
             <nav className="flex-1 p-4 space-y-1">
-                {navItems.map((item) => {
+                {navItems.map((item, index) => {
+                    if (item.type === 'divider') {
+                        return <hr key={index} className="my-4 border-stone-800" />;
+                    }
+
                     const Icon = item.icon;
                     const isActive = currentPage === item.id;
 

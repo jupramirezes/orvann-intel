@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import DashboardPage from './pages/DashboardPage';
 import ProductsPage from './pages/ProductsPage';
-import FinancePage from './pages/FinancePage'; // New
+import FinancePage from './pages/FinancePage';
+import StudioPage from './pages/StudioPage'; // New
 import SimulatorPage from './pages/SimulatorPage';
 import QuotesPage from './pages/QuotesPage';
 
@@ -25,6 +26,8 @@ const App = () => {
         return <ProductsPage onNavigate={handleNavigate} />;
       case 'finance':
         return <FinancePage />;
+      case 'studio':
+        return <StudioPage />;
       case 'simulator':
         return <SimulatorPage initialProductId={simulatorProductId} />;
       case 'quotes':

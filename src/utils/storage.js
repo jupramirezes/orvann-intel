@@ -4,8 +4,37 @@ const STORAGE_KEYS = {
     QUOTES: 'orvann_quotes',
     SETTINGS: 'orvann_settings',
     COSTS: 'orvann_fixed_costs',
+    COSTS: 'orvann_fixed_costs',
     DEBTS: 'orvann_debts',
+    IDEAS: 'orvann_ideas', // Added
 };
+
+// --- Financial Data Helpers ---
+// ... existing financial helpers ...
+// (Kept separate for brevity in display but applied correctly in file)
+
+export const getIdeas = () => {
+    const data = localStorage.getItem(STORAGE_KEYS.IDEAS);
+    return data ? JSON.parse(data) : [];
+};
+
+export const saveIdea = (idea) => {
+    const ideas = getIdeas();
+    const newIdea = { ...idea, id: Date.now(), createdAt: new Date().toISOString() };
+    const updated = [newIdea, ...ideas];
+    localStorage.setItem(STORAGE_KEYS.IDEAS, JSON.stringify(updated));
+    window.dispatchEvent(new Event('storage-update'));
+    return newIdea;
+};
+
+export const deleteIdea = (id) => {
+    const ideas = getIdeas();
+    const updated = ideas.filter(i => i.id !== id);
+    localStorage.setItem(STORAGE_KEYS.IDEAS, JSON.stringify(updated));
+    window.dispatchEvent(new Event('storage-update'));
+    return updated;
+};
+
 
 // --- Financial Data Helpers ---
 
