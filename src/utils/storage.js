@@ -1,5 +1,5 @@
 // Storage utilities for ORVANN-Intel
-const STORAGE_KEYS = {
+export const STORAGE_KEYS = {
     PRODUCTS: 'orvann_products',
     QUOTES: 'orvann_quotes',
     SETTINGS: 'orvann_settings',
