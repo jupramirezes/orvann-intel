@@ -6,17 +6,19 @@ import {
     FileText,
     TrendingUp,
     DollarSign,
-    Sparkles // Added
+    Sparkles, // Added
+    ShieldCheck // Added
 } from 'lucide-react';
 
 const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'studio', label: 'The Studio', icon: Sparkles }, // Added
+    { id: 'studio', label: 'The Studio', icon: Sparkles },
     { id: 'products', label: 'Productos', icon: Package },
     { id: 'simulator', label: 'Simulador', icon: Calculator },
     { id: 'quotes', label: 'Cotizaciones', icon: FileText },
     { type: 'divider' },
     { id: 'finance', label: 'Finanzas & Negocio', icon: DollarSign },
+    { id: 'settings', label: 'Datos & Seguridad', icon: ShieldCheck }, // Added
 ];
 
 const Sidebar = ({ currentPage, onNavigate }) => {

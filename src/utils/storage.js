@@ -183,3 +183,55 @@ export const formatCOP = (value) => {
 export const formatPercent = (value) => {
     return `${value.toFixed(1)}%`;
 };
+
+// --- Backup & Restore ---
+
+export const exportData = () => {
+    const backup = {
+        products: JSON.parse(localStorage.getItem(STORAGE_KEYS.PRODUCTS) || '[]'),
+        quotes: JSON.parse(localStorage.getItem(STORAGE_KEYS.QUOTES) || '[]'),
+        fixedCosts: JSON.parse(localStorage.getItem(STORAGE_KEYS.COSTS) || '[]'),
+        debts: JSON.parse(localStorage.getItem(STORAGE_KEYS.DEBTS) || '[]'),
+        ideas: JSON.parse(localStorage.getItem(STORAGE_KEYS.IDEAS) || '[]'),
+        settings: JSON.parse(localStorage.getItem(STORAGE_KEYS.SETTINGS) || '{}'),
+        timestamp: new Date().toISOString(),
+        version: '3.1'
+    };
+
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ORVANN_Backup_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
+
+export const importData = (file) => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const backup = JSON.parse(e.target.result);
+
+                // Validate basic structure
+                if (!backup.products || !backup.version) throw new Error('Archivo de backup inválido');
+
+                if (backup.products) localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(backup.products));
+                if (backup.quotes) localStorage.setItem(STORAGE_KEYS.QUOTES, JSON.stringify(backup.quotes));
+                if (backup.fixedCosts) localStorage.setItem(STORAGE_KEYS.COSTS, JSON.stringify(backup.fixedCosts));
+                if (backup.debts) localStorage.setItem(STORAGE_KEYS.DEBTS, JSON.stringify(backup.debts));
+                if (backup.ideas) localStorage.setItem(STORAGE_KEYS.IDEAS, JSON.stringify(backup.ideas));
+                if (backup.settings) localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(backup.settings));
+
+                window.dispatchEvent(new Event('storage-update'));
+                resolve(true);
+            } catch (error) {
+                reject(error);
+            }
+        };
+        reader.readAsText(file);
+    });
+};

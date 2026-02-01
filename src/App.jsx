@@ -3,7 +3,8 @@ import Sidebar from './components/Sidebar';
 import DashboardPage from './pages/DashboardPage';
 import ProductsPage from './pages/ProductsPage';
 import FinancePage from './pages/FinancePage';
-import StudioPage from './pages/StudioPage'; // New
+import StudioPage from './pages/StudioPage';
+import SettingsPage from './pages/SettingsPage'; // New
 import SimulatorPage from './pages/SimulatorPage';
 import QuotesPage from './pages/QuotesPage';
 
@@ -28,6 +29,8 @@ const App = () => {
         return <FinancePage />;
       case 'studio':
         return <StudioPage />;
+      case 'settings':
+        return <SettingsPage />;
       case 'simulator':
         return <SimulatorPage initialProductId={simulatorProductId} />;
       case 'quotes':
