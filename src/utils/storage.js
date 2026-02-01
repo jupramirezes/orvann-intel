@@ -1,9 +1,40 @@
 // Storage utilities for ORVANN-Intel
 const STORAGE_KEYS = {
     PRODUCTS: 'orvann_products',
+    CATEGORIES: 'orvann_categories',
     QUOTES: 'orvann_quotes',
     SETTINGS: 'orvann_settings',
 };
+
+export const defaultCategories = [
+    {
+        id: 1,
+        name: "Hoodie Heavyweight",
+        fabricCost: 35000,
+        confectionCost: 15000,
+        printCost: 8000,
+        packagingCost: 2500,
+        suggestedPvp: 145000,
+    },
+    {
+        id: 2,
+        name: "Camiseta Premium",
+        fabricCost: 12000,
+        confectionCost: 8000,
+        printCost: 5000,
+        packagingCost: 2500,
+        suggestedPvp: 85000,
+    },
+    {
+        id: 3,
+        name: "Cargo Pants",
+        fabricCost: 28000,
+        confectionCost: 18000,
+        printCost: 0,
+        packagingCost: 2500,
+        suggestedPvp: 135000,
+    },
+];
 
 // Default products with full cost structure
 export const defaultProducts = [
@@ -74,6 +105,40 @@ export const deleteProduct = (id) => {
     const products = getProducts();
     const filtered = products.filter(p => p.id !== id);
     saveProducts(filtered);
+    return filtered;
+};
+
+// Categories CRUD (Templates)
+export const getCategories = () => {
+    const saved = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
+    return saved ? JSON.parse(saved) : defaultCategories;
+};
+
+export const saveCategories = (categories) => {
+    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
+};
+
+export const addCategory = (category) => {
+    const categories = getCategories();
+    const newCat = {
+        ...category,
+        id: Date.now(),
+    };
+    saveCategories([...categories, newCat]);
+    return newCat;
+};
+
+export const updateCategory = (id, updates) => {
+    const categories = getCategories();
+    const updated = categories.map(c => c.id === id ? { ...c, ...updates } : c);
+    saveCategories(updated);
+    return updated;
+};
+
+export const deleteCategory = (id) => {
+    const categories = getCategories();
+    const filtered = categories.filter(c => c.id !== id);
+    saveCategories(filtered);
     return filtered;
 };
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import DashboardPage from './pages/DashboardPage';
 import ProductsPage from './pages/ProductsPage';
+import CategoriesPage from './pages/CategoriesPage';
 import SimulatorPage from './pages/SimulatorPage';
 import QuotesPage from './pages/QuotesPage';
 
@@ -22,6 +23,8 @@ const App = () => {
         return <DashboardPage onNavigate={handleNavigate} />;
       case 'products':
         return <ProductsPage onNavigate={handleNavigate} />;
+      case 'categories':
+        return <CategoriesPage />;
       case 'simulator':
         return <SimulatorPage initialProductId={simulatorProductId} />;
       case 'quotes':
@@ -32,9 +35,9 @@ const App = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-black">
+    <div className="flex min-h-screen bg-stone-950">
       <Sidebar currentPage={currentPage} onNavigate={handleNavigate} />
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 overflow-hidden overflow-y-auto h-screen">
         {renderPage()}
       </main>
     </div>

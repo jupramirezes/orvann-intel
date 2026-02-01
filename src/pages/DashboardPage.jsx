@@ -54,12 +54,12 @@ const DashboardPage = ({ onNavigate }) => {
             {/* Header */}
             <div className="flex items-end justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-                    <p className="text-zinc-500">Vista general de tu catálogo y rentabilidad</p>
+                    <h1 className="text-3xl font-bold text-stone-50 mb-2 font-serif">Dashboard</h1>
+                    <p className="text-stone-400">Vista general de tu catálogo y rentabilidad</p>
                 </div>
                 <button
                     onClick={() => onNavigate('simulator')}
-                    className="flex items-center gap-2 px-5 py-3 bg-white text-black rounded-xl font-medium hover:bg-zinc-200 transition-colors"
+                    className="flex items-center gap-2 px-5 py-3 bg-stone-100 text-stone-900 rounded-xl font-medium hover:bg-stone-200 transition-colors shadow-lg shadow-black/20"
                 >
                     <Zap size={18} />
                     Nueva Simulación
@@ -101,12 +101,12 @@ const DashboardPage = ({ onNavigate }) => {
             {/* Quick Actions */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Products Preview */}
-                <div className="rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/5 p-6">
+                <div className="rounded-2xl bg-stone-900 border border-stone-800 p-6 shadow-xl shadow-black/20">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-lg font-bold text-white">Productos Recientes</h2>
+                        <h2 className="text-lg font-bold text-stone-50 font-serif">Productos Recientes</h2>
                         <button
                             onClick={() => onNavigate('products')}
-                            className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 transition-colors"
+                            className="text-xs text-stone-400 hover:text-stone-100 flex items-center gap-1 transition-colors"
                         >
                             Ver todos <ArrowRight size={14} />
                         </button>
@@ -124,14 +124,14 @@ const DashboardPage = ({ onNavigate }) => {
                             });
 
                             return (
-                                <div key={p.id} className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer" onClick={() => onNavigate('simulator', p.id)}>
+                                <div key={p.id} className="flex items-center justify-between p-4 rounded-xl bg-stone-800/50 hover:bg-stone-800 transition-colors cursor-pointer" onClick={() => onNavigate('simulator', p.id)}>
                                     <div>
-                                        <p className="font-medium text-white">{p.name}</p>
-                                        <p className="text-xs text-zinc-500">{p.category}</p>
+                                        <p className="font-medium text-stone-50 font-serif">{p.name}</p>
+                                        <p className="text-xs text-stone-500">{p.category}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-bold text-white">{formatCOP(p.defaultPvp)}</p>
-                                        <p className={`text-xs ${result.netMarginPercent > 30 ? 'text-emerald-400' : 'text-zinc-400'}`}>
+                                        <p className="font-bold text-stone-50">{formatCOP(p.defaultPvp)}</p>
+                                        <p className={`text-xs ${result.netMarginPercent > 30 ? 'text-emerald-500' : 'text-stone-400'}`}>
                                             {formatPercent(result.netMarginPercent)} margen
                                         </p>
                                     </div>
@@ -142,12 +142,12 @@ const DashboardPage = ({ onNavigate }) => {
                 </div>
 
                 {/* Recent Quotes */}
-                <div className="rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/5 p-6">
+                <div className="rounded-2xl bg-stone-900 border border-stone-800 p-6 shadow-xl shadow-black/20">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-lg font-bold text-white">Cotizaciones Recientes</h2>
+                        <h2 className="text-lg font-bold text-stone-50 font-serif">Cotizaciones Recientes</h2>
                         <button
                             onClick={() => onNavigate('quotes')}
-                            className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 transition-colors"
+                            className="text-xs text-stone-400 hover:text-stone-100 flex items-center gap-1 transition-colors"
                         >
                             Ver todas <ArrowRight size={14} />
                         </button>
@@ -155,10 +155,10 @@ const DashboardPage = ({ onNavigate }) => {
 
                     {quotes.length === 0 ? (
                         <div className="text-center py-12">
-                            <p className="text-zinc-500 text-sm">No hay cotizaciones guardadas</p>
+                            <p className="text-stone-500 text-sm">No hay cotizaciones guardadas</p>
                             <button
                                 onClick={() => onNavigate('simulator')}
-                                className="mt-4 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                                className="mt-4 text-xs text-amber-600 hover:text-amber-500 transition-colors font-medium"
                             >
                                 Crear primera simulación →
                             </button>
@@ -166,14 +166,14 @@ const DashboardPage = ({ onNavigate }) => {
                     ) : (
                         <div className="space-y-3">
                             {quotes.slice(0, 4).map(q => (
-                                <div key={q.id} className="flex items-center justify-between p-4 rounded-xl bg-white/5">
+                                <div key={q.id} className="flex items-center justify-between p-4 rounded-xl bg-stone-800/50 hover:bg-stone-800 transition-colors">
                                     <div>
-                                        <p className="font-medium text-white">{q.productName}</p>
-                                        <p className="text-xs text-zinc-500">{q.quantity} unidades</p>
+                                        <p className="font-medium text-stone-50 font-serif">{q.productName}</p>
+                                        <p className="text-xs text-stone-500">{q.quantity} unidades</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-bold text-emerald-400">{formatCOP(q.totalProfit)}</p>
-                                        <p className="text-xs text-zinc-500">ganancia total</p>
+                                        <p className="font-bold text-emerald-500">{formatCOP(q.totalProfit)}</p>
+                                        <p className="text-xs text-stone-500">ganancia total</p>
                                     </div>
                                 </div>
                             ))}

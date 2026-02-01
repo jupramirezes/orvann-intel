@@ -123,13 +123,13 @@ const QuotesPage = ({ onNavigate }) => {
             {/* Header */}
             <div className="flex items-end justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Cotizaciones Guardadas</h1>
-                    <p className="text-zinc-500">Historial de simulaciones y proyecciones</p>
+                    <h1 className="text-3xl font-bold text-stone-50 mb-2 font-serif">Cotizaciones Guardadas</h1>
+                    <p className="text-stone-400">Historial de simulaciones y proyecciones</p>
                 </div>
                 {quotes.length > 0 && (
                     <button
                         onClick={exportToPDF}
-                        className="flex items-center gap-2 px-5 py-3 bg-white text-black rounded-xl font-medium hover:bg-zinc-200 transition-colors"
+                        className="flex items-center gap-2 px-5 py-3 bg-stone-100 text-stone-900 rounded-xl font-medium hover:bg-stone-200 transition-colors shadow-lg shadow-black/20"
                     >
                         <Download size={18} />
                         Exportar PDF
@@ -138,13 +138,13 @@ const QuotesPage = ({ onNavigate }) => {
             </div>
 
             {quotes.length === 0 ? (
-                <div className="rounded-2xl bg-zinc-900/50 border border-zinc-800 p-12 text-center">
-                    <FileText size={48} className="mx-auto text-zinc-600 mb-4" />
-                    <h2 className="text-xl font-bold text-white mb-2">Sin cotizaciones</h2>
-                    <p className="text-zinc-500 mb-6">Aún no has guardado ninguna simulación</p>
+                <div className="rounded-2xl bg-stone-800/30 border border-stone-800 p-12 text-center">
+                    <FileText size={48} className="mx-auto text-stone-600 mb-4" />
+                    <h2 className="text-xl font-bold text-stone-50 mb-2 font-serif">Sin cotizaciones</h2>
+                    <p className="text-stone-500 mb-6">Aún no has guardado ninguna simulación</p>
                     <button
                         onClick={() => onNavigate('simulator')}
-                        className="px-6 py-3 bg-white text-black rounded-xl font-medium hover:bg-zinc-200 transition-colors"
+                        className="px-6 py-3 bg-amber-600 text-white rounded-xl font-medium hover:bg-amber-500 transition-colors shadow-lg shadow-amber-900/20"
                     >
                         Crear primera simulación
                     </button>
@@ -154,19 +154,19 @@ const QuotesPage = ({ onNavigate }) => {
                     {quotes.map((quote) => (
                         <div
                             key={quote.id}
-                            className="rounded-2xl bg-zinc-900/50 border border-zinc-800 p-6 hover:border-zinc-700 transition-all group"
+                            className="rounded-2xl bg-stone-800/30 border border-stone-800 p-6 hover:border-amber-600/30 transition-all group hover:bg-stone-800/50 shadow-lg shadow-black/10"
                         >
                             <div className="flex items-start justify-between mb-4">
                                 <div>
-                                    <h3 className="font-bold text-white text-lg">{quote.productName}</h3>
-                                    <div className="flex items-center gap-2 text-xs text-zinc-500 mt-1">
+                                    <h3 className="font-bold text-stone-50 text-lg font-serif">{quote.productName}</h3>
+                                    <div className="flex items-center gap-2 text-xs text-stone-500 mt-1">
                                         <Calendar size={12} />
                                         {formatDate(quote.createdAt)}
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => handleDelete(quote.id)}
-                                    className="p-2 text-zinc-600 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                    className="p-2 text-stone-500 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                                 >
                                     <Trash2 size={16} />
                                 </button>
@@ -174,29 +174,29 @@ const QuotesPage = ({ onNavigate }) => {
 
                             <div className="space-y-3 mb-4">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-zinc-500">Cantidad</span>
-                                    <span className="text-white font-medium">{quote.quantity} unidades</span>
+                                    <span className="text-stone-500">Cantidad</span>
+                                    <span className="text-stone-200 font-medium">{quote.quantity} unidades</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-zinc-500">PVP</span>
-                                    <span className="text-white font-medium">{formatCOP(quote.pvp)}</span>
+                                    <span className="text-stone-500">PVP</span>
+                                    <span className="text-stone-200 font-medium">{formatCOP(quote.pvp)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-zinc-500">Punto Equilibrio</span>
-                                    <span className="text-white font-medium">{quote.breakEvenUnits} unidades</span>
+                                    <span className="text-stone-500">Punto Equilibrio</span>
+                                    <span className="text-stone-200 font-medium">{quote.breakEvenUnits} unidades</span>
                                 </div>
                             </div>
 
-                            <div className="pt-4 border-t border-zinc-800 space-y-2">
+                            <div className="pt-4 border-t border-stone-800 space-y-2">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-zinc-500 text-sm">Margen Neto</span>
-                                    <span className={`font-bold ${quote.netMarginPercent > 30 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                    <span className="text-stone-500 text-sm">Margen Neto</span>
+                                    <span className={`font-bold ${quote.netMarginPercent > 30 ? 'text-emerald-500' : 'text-amber-500'}`}>
                                         {formatPercent(quote.netMarginPercent)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-zinc-500 text-sm">Ganancia Total</span>
-                                    <span className={`text-lg font-bold ${quote.totalProfit > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    <span className="text-stone-500 text-sm">Ganancia Total</span>
+                                    <span className={`text-lg font-bold ${quote.totalProfit > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                                         {formatCOP(quote.totalProfit)}
                                     </span>
                                 </div>

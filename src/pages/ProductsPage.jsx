@@ -4,14 +4,14 @@ import {
     Trash2,
     Edit3,
     Save,
-    X,
-    Package
+    X
 } from 'lucide-react';
-import { getProducts, saveProducts, addProduct, deleteProduct, formatCOP } from '../utils/storage';
+import { getProducts, saveProducts, addProduct, deleteProduct, formatCOP, getCategories } from '../utils/storage';
 import { calculateFinancials } from '../utils/calculator';
 
 const ProductsPage = () => {
     const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({});
     const [showAddForm, setShowAddForm] = useState(false);
@@ -27,6 +27,7 @@ const ProductsPage = () => {
 
     useEffect(() => {
         setProducts(getProducts());
+        setCategories(getCategories());
     }, []);
 
     const handleEdit = (product) => {
@@ -53,6 +54,25 @@ const ProductsPage = () => {
         }
     };
 
+    const handleCategoryChange = (e) => {
+        const catName = e.target.value;
+        const category = categories.find(c => c.name === catName);
+
+        if (category) {
+            setNewProduct({
+                ...newProduct,
+                category: catName,
+                fabricCost: category.fabricCost,
+                confectionCost: category.confectionCost,
+                defaultPrintCost: category.printCost || 0,
+                packagingCost: category.packagingCost,
+                defaultPvp: category.suggestedPvp
+            });
+        } else {
+            setNewProduct({ ...newProduct, category: catName });
+        }
+    };
+
     const handleAddProduct = () => {
         if (!newProduct.name) return;
         const created = addProduct(newProduct);
@@ -74,12 +94,12 @@ const ProductsPage = () => {
             {/* Header */}
             <div className="flex items-end justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Catálogo de Productos</h1>
-                    <p className="text-zinc-500">Gestiona tus productos y sus costos base</p>
+                    <h1 className="text-3xl font-bold text-stone-50 mb-2 font-serif">Catálogo de Productos</h1>
+                    <p className="text-stone-400">Gestiona tus productos y asigna plantillas de costos</p>
                 </div>
                 <button
                     onClick={() => setShowAddForm(true)}
-                    className="flex items-center gap-2 px-5 py-3 bg-white text-black rounded-xl font-medium hover:bg-zinc-200 transition-colors"
+                    className="flex items-center gap-2 px-5 py-3 bg-stone-100 text-stone-900 rounded-xl font-medium hover:bg-stone-200 transition-colors"
                 >
                     <Plus size={18} />
                     Agregar Producto
@@ -88,65 +108,90 @@ const ProductsPage = () => {
 
             {/* Add Product Form */}
             {showAddForm && (
-                <div className="rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 p-6">
-                    <h3 className="text-lg font-bold text-white mb-4">Nuevo Producto</h3>
+                <div className="rounded-2xl bg-stone-800/50 border border-stone-700/50 p-6 backdrop-blur-sm">
+                    <h3 className="text-lg font-bold text-stone-50 mb-4 font-serif">Nuevo Producto</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                        <input
-                            type="text"
-                            placeholder="Nombre"
-                            value={newProduct.name}
-                            onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                            className="px-4 py-3 bg-black/50 border border-white/10 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
-                        />
-                        <input
-                            type="text"
-                            placeholder="Categoría"
-                            value={newProduct.category}
-                            onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-                            className="px-4 py-3 bg-black/50 border border-white/10 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
-                        />
-                        <input
-                            type="number"
-                            placeholder="Costo Tela"
-                            value={newProduct.fabricCost || ''}
-                            onChange={(e) => setNewProduct({ ...newProduct, fabricCost: Number(e.target.value) })}
-                            className="px-4 py-3 bg-black/50 border border-white/10 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
-                        />
-                        <input
-                            type="number"
-                            placeholder="Costo Confección"
-                            value={newProduct.confectionCost || ''}
-                            onChange={(e) => setNewProduct({ ...newProduct, confectionCost: Number(e.target.value) })}
-                            className="px-4 py-3 bg-black/50 border border-white/10 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
-                        />
-                        <input
-                            type="number"
-                            placeholder="Costo Estampado"
-                            value={newProduct.defaultPrintCost || ''}
-                            onChange={(e) => setNewProduct({ ...newProduct, defaultPrintCost: Number(e.target.value) })}
-                            className="px-4 py-3 bg-black/50 border border-white/10 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
-                        />
-                        <input
-                            type="number"
-                            placeholder="Empaque"
-                            value={newProduct.packagingCost || ''}
-                            onChange={(e) => setNewProduct({ ...newProduct, packagingCost: Number(e.target.value) })}
-                            className="px-4 py-3 bg-black/50 border border-white/10 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
-                        />
-                        <input
-                            type="number"
-                            placeholder="PVP Sugerido"
-                            value={newProduct.defaultPvp || ''}
-                            onChange={(e) => setNewProduct({ ...newProduct, defaultPvp: Number(e.target.value) })}
-                            className="px-4 py-3 bg-black/50 border border-white/10 rounded-xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
-                        />
+                        <div className="col-span-2 md:col-span-1">
+                            <label className="text-xs text-stone-500 block mb-1">Nombre</label>
+                            <input
+                                type="text"
+                                placeholder="Nombre"
+                                value={newProduct.name}
+                                onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                                className="w-full px-4 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-50 focus:outline-none focus:border-amber-600"
+                            />
+                        </div>
+                        <div className="col-span-2 md:col-span-1">
+                            <label className="text-xs text-stone-500 block mb-1">Categoría (Plantilla)</label>
+                            <select
+                                value={newProduct.category}
+                                onChange={handleCategoryChange}
+                                className="w-full px-4 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-50 focus:outline-none focus:border-amber-600 appearance-none cursor-pointer"
+                            >
+                                <option value="">Seleccionar...</option>
+                                {categories.map(cat => (
+                                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                                ))}
+                                <option value="Otro">Otro (Manual)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-xs text-stone-500 block mb-1">Costo Tela</label>
+                            <input
+                                type="number"
+                                placeholder="Costo Tela"
+                                value={newProduct.fabricCost || ''}
+                                onChange={(e) => setNewProduct({ ...newProduct, fabricCost: Number(e.target.value) })}
+                                className="w-full px-4 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-50 focus:outline-none focus:border-amber-600"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs text-stone-500 block mb-1">Costo Confección</label>
+                            <input
+                                type="number"
+                                placeholder="Confección"
+                                value={newProduct.confectionCost || ''}
+                                onChange={(e) => setNewProduct({ ...newProduct, confectionCost: Number(e.target.value) })}
+                                className="w-full px-4 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-50 focus:outline-none focus:border-amber-600"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs text-stone-500 block mb-1">Estampado</label>
+                            <input
+                                type="number"
+                                placeholder="Estampado"
+                                value={newProduct.defaultPrintCost || ''}
+                                onChange={(e) => setNewProduct({ ...newProduct, defaultPrintCost: Number(e.target.value) })}
+                                className="w-full px-4 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-50 focus:outline-none focus:border-amber-600"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs text-stone-500 block mb-1">Empaque</label>
+                            <input
+                                type="number"
+                                placeholder="Empaque"
+                                value={newProduct.packagingCost || ''}
+                                onChange={(e) => setNewProduct({ ...newProduct, packagingCost: Number(e.target.value) })}
+                                className="w-full px-4 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-50 focus:outline-none focus:border-amber-600"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs text-stone-500 block mb-1">PVP Sugerido</label>
+                            <input
+                                type="number"
+                                placeholder="PVP"
+                                value={newProduct.defaultPvp || ''}
+                                onChange={(e) => setNewProduct({ ...newProduct, defaultPvp: Number(e.target.value) })}
+                                className="w-full px-4 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-50 focus:outline-none focus:border-amber-600"
+                            />
+                        </div>
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={handleAddProduct} className="px-4 py-2 bg-emerald-500 text-black rounded-lg font-medium hover:bg-emerald-400 transition-colors">
+                        <button onClick={handleAddProduct} className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-500 transition-colors shadow-lg shadow-amber-900/20">
                             <Save size={16} className="inline mr-2" />
                             Guardar
                         </button>
-                        <button onClick={() => setShowAddForm(false)} className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors">
+                        <button onClick={() => setShowAddForm(false)} className="px-4 py-2 bg-stone-700 text-stone-300 rounded-lg hover:bg-stone-600 transition-colors">
                             Cancelar
                         </button>
                     </div>
@@ -154,18 +199,17 @@ const ProductsPage = () => {
             )}
 
             {/* Products Table */}
-            <div className="rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/5 overflow-hidden">
+            <div className="rounded-2xl bg-stone-900 border border-stone-800 overflow-hidden shadow-xl shadow-black/20">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b border-white/5">
-                            <th className="text-left px-6 py-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Producto</th>
-                            <th className="text-right px-6 py-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Tela</th>
-                            <th className="text-right px-6 py-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Confección</th>
-                            <th className="text-right px-6 py-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Estampado</th>
-                            <th className="text-right px-6 py-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Empaque</th>
-                            <th className="text-right px-6 py-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">PVP</th>
-                            <th className="text-right px-6 py-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Margen</th>
-                            <th className="text-center px-6 py-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Acciones</th>
+                        <tr className="border-b border-stone-800 bg-stone-800/40">
+                            <th className="text-left px-6 py-4 text-xs font-medium text-stone-500 uppercase tracking-wider font-serif">Producto</th>
+                            <th className="text-right px-6 py-4 text-xs font-medium text-stone-500 uppercase tracking-wider font-serif">Tela</th>
+                            <th className="text-right px-6 py-4 text-xs font-medium text-stone-500 uppercase tracking-wider font-serif">Confección</th>
+                            <th className="text-right px-6 py-4 text-xs font-medium text-stone-500 uppercase tracking-wider font-serif">Estampado</th>
+                            <th className="text-right px-6 py-4 text-xs font-medium text-stone-500 uppercase tracking-wider font-serif">PVP</th>
+                            <th className="text-right px-6 py-4 text-xs font-medium text-stone-500 uppercase tracking-wider font-serif">Margen</th>
+                            <th className="text-center px-6 py-4 text-xs font-medium text-stone-500 uppercase tracking-wider font-serif">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -183,7 +227,7 @@ const ProductsPage = () => {
                             });
 
                             return (
-                                <tr key={product.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                                <tr key={product.id} className="border-b border-stone-800 hover:bg-stone-800/30 transition-colors">
                                     <td className="px-6 py-4">
                                         {isEditing ? (
                                             <div className="space-y-1">
@@ -191,38 +235,45 @@ const ProductsPage = () => {
                                                     type="text"
                                                     value={editForm.name}
                                                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                                                    className="w-full px-2 py-1 bg-black/50 border border-white/20 rounded text-white text-sm focus:outline-none focus:border-white/40"
+                                                    className="w-full px-2 py-1 bg-stone-950 border border-stone-700 rounded text-stone-50 text-sm focus:outline-none focus:border-amber-600"
                                                 />
-                                                <input
-                                                    type="text"
+                                                <select
                                                     value={editForm.category}
                                                     onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                                                    className="w-full px-2 py-1 bg-black/50 border border-white/20 rounded text-zinc-400 text-xs focus:outline-none focus:border-white/40"
-                                                />
+                                                    className="w-full px-2 py-1 bg-stone-950 border border-stone-700 rounded text-stone-400 text-xs focus:outline-none focus:border-amber-600"
+                                                >
+                                                    {categories.map(cat => (
+                                                        <option key={cat.id} value={cat.name}>{cat.name}</option>
+                                                    ))}
+                                                    <option value={editForm.category}>{editForm.category}</option>
+                                                </select>
                                             </div>
                                         ) : (
                                             <div>
-                                                <p className="font-medium text-white">{product.name}</p>
-                                                <p className="text-xs text-zinc-500">{product.category}</p>
+                                                <p className="font-medium text-stone-50 font-serif">{product.name}</p>
+                                                <p className="text-xs text-stone-500 flex items-center gap-1">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-600/50"></span>
+                                                    {product.category}
+                                                </p>
                                             </div>
                                         )}
                                     </td>
-                                    {['fabricCost', 'confectionCost', 'defaultPrintCost', 'packagingCost', 'defaultPvp'].map((field) => (
+                                    {['fabricCost', 'confectionCost', 'defaultPrintCost', 'defaultPvp'].map((field) => (
                                         <td key={field} className="px-6 py-4 text-right">
                                             {isEditing ? (
                                                 <input
                                                     type="number"
                                                     value={editForm[field]}
                                                     onChange={(e) => setEditForm({ ...editForm, [field]: Number(e.target.value) })}
-                                                    className="w-24 px-2 py-1 bg-black/50 border border-white/20 rounded text-white text-sm text-right focus:outline-none focus:border-white/40"
+                                                    className="w-24 px-2 py-1 bg-stone-950 border border-stone-700 rounded text-stone-50 text-sm text-right focus:outline-none focus:border-amber-600"
                                                 />
                                             ) : (
-                                                <span className="text-zinc-300">{formatCOP(data[field])}</span>
+                                                <span className="text-stone-300 font-mono text-sm">{formatCOP(data[field])}</span>
                                             )}
                                         </td>
                                     ))}
                                     <td className="px-6 py-4 text-right">
-                                        <span className={`font-bold ${result.netMarginPercent > 30 ? 'text-emerald-400' : result.netMarginPercent > 15 ? 'text-amber-400' : 'text-red-400'}`}>
+                                        <span className={`font-bold font-mono text-sm ${result.netMarginPercent > 30 ? 'text-emerald-500' : result.netMarginPercent > 15 ? 'text-amber-500' : 'text-red-500'}`}>
                                             {result.netMarginPercent.toFixed(1)}%
                                         </span>
                                     </td>
@@ -230,19 +281,19 @@ const ProductsPage = () => {
                                         <div className="flex items-center justify-center gap-2">
                                             {isEditing ? (
                                                 <>
-                                                    <button onClick={handleSaveEdit} className="p-2 text-emerald-400 hover:bg-emerald-400/10 rounded-lg transition-colors">
+                                                    <button onClick={handleSaveEdit} className="p-2 text-amber-600 hover:bg-amber-600/10 rounded-lg transition-colors">
                                                         <Save size={16} />
                                                     </button>
-                                                    <button onClick={handleCancelEdit} className="p-2 text-zinc-400 hover:bg-white/10 rounded-lg transition-colors">
+                                                    <button onClick={handleCancelEdit} className="p-2 text-stone-500 hover:bg-stone-800 rounded-lg transition-colors">
                                                         <X size={16} />
                                                     </button>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <button onClick={() => handleEdit(product)} className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+                                                    <button onClick={() => handleEdit(product)} className="p-2 text-stone-500 hover:text-stone-100 hover:bg-stone-800 rounded-lg transition-colors">
                                                         <Edit3 size={16} />
                                                     </button>
-                                                    <button onClick={() => handleDelete(product.id)} className="p-2 text-zinc-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
+                                                    <button onClick={() => handleDelete(product.id)} className="p-2 text-stone-500 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-colors">
                                                         <Trash2 size={16} />
                                                     </button>
                                                 </>
