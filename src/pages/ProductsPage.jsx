@@ -6,33 +6,43 @@ import {
     Save,
     X
 } from 'lucide-react';
-import { getProducts, saveProducts, addProduct, deleteProduct, formatCOP, getCategories } from '../utils/storage';
+import { getProducts, saveProducts, addProduct, deleteProduct, formatCOP } from '../utils/storage';
 import { calculateFinancials } from '../utils/calculator';
 
 const ProductsPage = () => {
     const [products, setProducts] = useState([]);
-    const [categories, setCategories] = useState([]);
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({});
     const [showAddForm, setShowAddForm] = useState(false);
+
     const [newProduct, setNewProduct] = useState({
         name: '',
-        category: '',
-        fabricCost: 0,
-        confectionCost: 0,
-        defaultPrintCost: 0,
-        packagingCost: 2500,
+        costs: [
+            { id: 1, name: 'Tela', value: 0 },
+            { id: 2, name: 'Confección', value: 0 },
+            { id: 3, name: 'Estampado', value: 0 },
+            { id: 4, name: 'Empaque', value: 2500 }
+        ],
         defaultPvp: 0,
     });
 
     useEffect(() => {
         setProducts(getProducts());
-        setCategories(getCategories());
     }, []);
 
     const handleEdit = (product) => {
         setEditingId(product.id);
-        setEditForm({ ...product });
+        // Ensure legacy products have costs array structure
+        const safeProduct = { ...product };
+        if (!safeProduct.costs) {
+            safeProduct.costs = [
+                { id: '1-mig', name: 'Tela', value: safeProduct.fabricCost || 0 },
+                { id: '2-mig', name: 'Confección', value: safeProduct.confectionCost || 0 },
+                { id: '3-mig', name: 'Estampado', value: safeProduct.defaultPrintCost || 0 },
+                { id: '4-mig', name: 'Empaque', value: safeProduct.packagingCost || 0 }
+            ];
+        }
+        setEditForm(safeProduct);
     };
 
     const handleSaveEdit = () => {
@@ -54,25 +64,6 @@ const ProductsPage = () => {
         }
     };
 
-    const handleCategoryChange = (e) => {
-        const catName = e.target.value;
-        const category = categories.find(c => c.name === catName);
-
-        if (category) {
-            setNewProduct({
-                ...newProduct,
-                category: catName,
-                fabricCost: category.fabricCost,
-                confectionCost: category.confectionCost,
-                defaultPrintCost: category.printCost || 0,
-                packagingCost: category.packagingCost,
-                defaultPvp: category.suggestedPvp
-            });
-        } else {
-            setNewProduct({ ...newProduct, category: catName });
-        }
-    };
-
     const handleAddProduct = () => {
         if (!newProduct.name) return;
         const created = addProduct(newProduct);
@@ -80,13 +71,52 @@ const ProductsPage = () => {
         setShowAddForm(false);
         setNewProduct({
             name: '',
-            category: '',
-            fabricCost: 0,
-            confectionCost: 0,
-            defaultPrintCost: 0,
-            packagingCost: 2500,
+            costs: [
+                { id: 1, name: 'Tela', value: 0 },
+                { id: 2, name: 'Confección', value: 0 },
+                { id: 3, name: 'Estampado', value: 0 },
+                { id: 4, name: 'Empaque', value: 2500 }
+            ],
             defaultPvp: 0,
         });
+    };
+
+    // Dynamic Cost Handlers
+    const updateNewCost = (index, field, value) => {
+        const updatedCosts = [...newProduct.costs];
+        updatedCosts[index] = { ...updatedCosts[index], [field]: value };
+        setNewProduct({ ...newProduct, costs: updatedCosts });
+    };
+
+    const addNewCostRow = () => {
+        setNewProduct({
+            ...newProduct,
+            costs: [...newProduct.costs, { id: Date.now(), name: '', value: 0 }]
+        });
+    };
+
+    const removeNewCostRow = (index) => {
+        const updatedCosts = newProduct.costs.filter((_, i) => i !== index);
+        setNewProduct({ ...newProduct, costs: updatedCosts });
+    };
+
+    // Edit Form Handlers
+    const updateEditCost = (index, field, value) => {
+        const updatedCosts = [...editForm.costs];
+        updatedCosts[index] = { ...updatedCosts[index], [field]: value };
+        setEditForm({ ...editForm, costs: updatedCosts });
+    };
+
+    const addEditCostRow = () => {
+        setEditForm({
+            ...editForm,
+            costs: [...editForm.costs, { id: Date.now(), name: '', value: 0 }]
+        });
+    };
+
+    const removeEditCostRow = (index) => {
+        const updatedCosts = editForm.costs.filter((_, i) => i !== index);
+        setEditForm({ ...editForm, costs: updatedCosts });
     };
 
     return (
@@ -94,8 +124,8 @@ const ProductsPage = () => {
             {/* Header */}
             <div className="flex items-end justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-stone-50 mb-2 font-serif">Catálogo de Productos</h1>
-                    <p className="text-stone-400">Gestiona tus productos y asigna plantillas de costos</p>
+                    <h1 className="text-3xl font-bold text-stone-50 mb-2 font-serif">Catálogo Dinámico</h1>
+                    <p className="text-stone-400">Define la estructura de costos única para cada producto</p>
                 </div>
                 <button
                     onClick={() => setShowAddForm(true)}
@@ -110,201 +140,182 @@ const ProductsPage = () => {
             {showAddForm && (
                 <div className="rounded-2xl bg-stone-800/50 border border-stone-700/50 p-6 backdrop-blur-sm">
                     <h3 className="text-lg font-bold text-stone-50 mb-4 font-serif">Nuevo Producto</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                        <div className="col-span-2 md:col-span-1">
-                            <label className="text-xs text-stone-500 block mb-1">Nombre</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label className="text-xs text-stone-500 block mb-1">Nombre del Producto</label>
                             <input
                                 type="text"
-                                placeholder="Nombre"
+                                placeholder="Ej: Hoodie Oversize"
                                 value={newProduct.name}
                                 onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                                className="w-full px-4 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-50 focus:outline-none focus:border-amber-600"
+                                className="w-full px-4 py-3 bg-stone-900 border border-stone-700 rounded-xl text-stone-50 focus:outline-none focus:border-amber-600 mb-4"
                             />
-                        </div>
-                        <div className="col-span-2 md:col-span-1">
-                            <label className="text-xs text-stone-500 block mb-1">Categoría (Plantilla)</label>
-                            <select
-                                value={newProduct.category}
-                                onChange={handleCategoryChange}
-                                className="w-full px-4 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-50 focus:outline-none focus:border-amber-600 appearance-none cursor-pointer"
-                            >
-                                <option value="">Seleccionar...</option>
-                                {categories.map(cat => (
-                                    <option key={cat.id} value={cat.name}>{cat.name}</option>
-                                ))}
-                                <option value="Otro">Otro (Manual)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="text-xs text-stone-500 block mb-1">Costo Tela</label>
+
+                            <label className="text-xs text-stone-500 block mb-1">Precio de Venta (PVP)</label>
                             <input
                                 type="number"
-                                placeholder="Costo Tela"
-                                value={newProduct.fabricCost || ''}
-                                onChange={(e) => setNewProduct({ ...newProduct, fabricCost: Number(e.target.value) })}
-                                className="w-full px-4 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-50 focus:outline-none focus:border-amber-600"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs text-stone-500 block mb-1">Costo Confección</label>
-                            <input
-                                type="number"
-                                placeholder="Confección"
-                                value={newProduct.confectionCost || ''}
-                                onChange={(e) => setNewProduct({ ...newProduct, confectionCost: Number(e.target.value) })}
-                                className="w-full px-4 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-50 focus:outline-none focus:border-amber-600"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs text-stone-500 block mb-1">Estampado</label>
-                            <input
-                                type="number"
-                                placeholder="Estampado"
-                                value={newProduct.defaultPrintCost || ''}
-                                onChange={(e) => setNewProduct({ ...newProduct, defaultPrintCost: Number(e.target.value) })}
-                                className="w-full px-4 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-50 focus:outline-none focus:border-amber-600"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs text-stone-500 block mb-1">Empaque</label>
-                            <input
-                                type="number"
-                                placeholder="Empaque"
-                                value={newProduct.packagingCost || ''}
-                                onChange={(e) => setNewProduct({ ...newProduct, packagingCost: Number(e.target.value) })}
-                                className="w-full px-4 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-50 focus:outline-none focus:border-amber-600"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs text-stone-500 block mb-1">PVP Sugerido</label>
-                            <input
-                                type="number"
-                                placeholder="PVP"
+                                placeholder="$ 0"
                                 value={newProduct.defaultPvp || ''}
                                 onChange={(e) => setNewProduct({ ...newProduct, defaultPvp: Number(e.target.value) })}
-                                className="w-full px-4 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-50 focus:outline-none focus:border-amber-600"
+                                className="w-full px-4 py-3 bg-stone-900 border border-stone-700 rounded-xl text-stone-50 focus:outline-none focus:border-amber-600 font-bold text-emerald-400"
                             />
                         </div>
+
+                        <div className="bg-stone-900/50 rounded-xl p-4 border border-stone-800">
+                            <h4 className="text-sm font-bold text-stone-400 mb-3 uppercase tracking-wider">Estructura de Costos</h4>
+                            <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                                {newProduct.costs.map((cost, index) => (
+                                    <div key={index} className="flex gap-2 items-center">
+                                        <input
+                                            type="text"
+                                            placeholder="Concepto"
+                                            value={cost.name}
+                                            onChange={(e) => updateNewCost(index, 'name', e.target.value)}
+                                            className="flex-1 px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-300 text-sm focus:border-amber-600 outline-none"
+                                        />
+                                        <input
+                                            type="number"
+                                            placeholder="Valor"
+                                            value={cost.value}
+                                            onChange={(e) => updateNewCost(index, 'value', Number(e.target.value))}
+                                            className="w-24 px-3 py-2 bg-stone-800 border border-stone-700 rounded-lg text-stone-300 text-sm text-right focus:border-amber-600 outline-none"
+                                        />
+                                        <button
+                                            onClick={() => removeNewCostRow(index)}
+                                            className="p-2 text-stone-600 hover:text-red-400 transition-colors"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            <button
+                                onClick={addNewCostRow}
+                                className="mt-3 w-full py-2 border border-dashed border-stone-700 text-stone-500 rounded-lg hover:border-amber-600 hover:text-amber-600 transition-colors text-sm flex items-center justify-center gap-2"
+                            >
+                                <Plus size={14} /> Agregar Costo
+                            </button>
+                        </div>
                     </div>
-                    <div className="flex gap-2">
-                        <button onClick={handleAddProduct} className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-500 transition-colors shadow-lg shadow-amber-900/20">
-                            <Save size={16} className="inline mr-2" />
-                            Guardar
-                        </button>
+
+                    <div className="flex gap-2 justify-end pt-4 border-t border-stone-700/50">
                         <button onClick={() => setShowAddForm(false)} className="px-4 py-2 bg-stone-700 text-stone-300 rounded-lg hover:bg-stone-600 transition-colors">
                             Cancelar
+                        </button>
+                        <button onClick={handleAddProduct} className="px-6 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-500 transition-colors shadow-lg shadow-amber-900/20">
+                            <Save size={16} className="inline mr-2" />
+                            Guardar Producto
                         </button>
                     </div>
                 </div>
             )}
 
-            {/* Products Table */}
-            <div className="rounded-2xl bg-stone-900 border border-stone-800 overflow-hidden shadow-xl shadow-black/20">
-                <table className="w-full">
-                    <thead>
-                        <tr className="border-b border-stone-800 bg-stone-800/40">
-                            <th className="text-left px-6 py-4 text-xs font-medium text-stone-500 uppercase tracking-wider font-serif">Producto</th>
-                            <th className="text-right px-6 py-4 text-xs font-medium text-stone-500 uppercase tracking-wider font-serif">Tela</th>
-                            <th className="text-right px-6 py-4 text-xs font-medium text-stone-500 uppercase tracking-wider font-serif">Confección</th>
-                            <th className="text-right px-6 py-4 text-xs font-medium text-stone-500 uppercase tracking-wider font-serif">Estampado</th>
-                            <th className="text-right px-6 py-4 text-xs font-medium text-stone-500 uppercase tracking-wider font-serif">PVP</th>
-                            <th className="text-right px-6 py-4 text-xs font-medium text-stone-500 uppercase tracking-wider font-serif">Margen</th>
-                            <th className="text-center px-6 py-4 text-xs font-medium text-stone-500 uppercase tracking-wider font-serif">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {products.map((product) => {
-                            const isEditing = editingId === product.id;
-                            const data = isEditing ? editForm : product;
+            {/* Products Grid */}
+            <div className="grid grid-cols-1 gap-4">
+                {products.map((product) => {
+                    const isEditing = editingId === product.id;
+                    const data = isEditing ? editForm : product;
 
-                            const result = calculateFinancials({
-                                quantity: 1,
-                                fabricCost: data.fabricCost,
-                                confectionCost: data.confectionCost,
-                                printingCost: data.defaultPrintCost,
-                                packagingCost: data.packagingCost,
-                                pvp: data.defaultPvp,
-                            });
+                    // Safe access to costs for calculation
+                    const costs = data.costs || [];
+                    const result = calculateFinancials({
+                        quantity: 1,
+                        costs: costs,
+                        pvp: data.defaultPvp,
+                    });
 
-                            return (
-                                <tr key={product.id} className="border-b border-stone-800 hover:bg-stone-800/30 transition-colors">
-                                    <td className="px-6 py-4">
-                                        {isEditing ? (
-                                            <div className="space-y-1">
-                                                <input
-                                                    type="text"
-                                                    value={editForm.name}
-                                                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                                                    className="w-full px-2 py-1 bg-stone-950 border border-stone-700 rounded text-stone-50 text-sm focus:outline-none focus:border-amber-600"
-                                                />
-                                                <select
-                                                    value={editForm.category}
-                                                    onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                                                    className="w-full px-2 py-1 bg-stone-950 border border-stone-700 rounded text-stone-400 text-xs focus:outline-none focus:border-amber-600"
-                                                >
-                                                    {categories.map(cat => (
-                                                        <option key={cat.id} value={cat.name}>{cat.name}</option>
-                                                    ))}
-                                                    <option value={editForm.category}>{editForm.category}</option>
-                                                </select>
-                                            </div>
-                                        ) : (
-                                            <div>
-                                                <p className="font-medium text-stone-50 font-serif">{product.name}</p>
-                                                <p className="text-xs text-stone-500 flex items-center gap-1">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-600/50"></span>
-                                                    {product.category}
-                                                </p>
-                                            </div>
-                                        )}
-                                    </td>
-                                    {['fabricCost', 'confectionCost', 'defaultPrintCost', 'defaultPvp'].map((field) => (
-                                        <td key={field} className="px-6 py-4 text-right">
-                                            {isEditing ? (
-                                                <input
-                                                    type="number"
-                                                    value={editForm[field]}
-                                                    onChange={(e) => setEditForm({ ...editForm, [field]: Number(e.target.value) })}
-                                                    className="w-24 px-2 py-1 bg-stone-950 border border-stone-700 rounded text-stone-50 text-sm text-right focus:outline-none focus:border-amber-600"
-                                                />
-                                            ) : (
-                                                <span className="text-stone-300 font-mono text-sm">{formatCOP(data[field])}</span>
-                                            )}
-                                        </td>
-                                    ))}
-                                    <td className="px-6 py-4 text-right">
-                                        <span className={`font-bold font-mono text-sm ${result.netMarginPercent > 30 ? 'text-emerald-500' : result.netMarginPercent > 15 ? 'text-amber-500' : 'text-red-500'}`}>
-                                            {result.netMarginPercent.toFixed(1)}%
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center justify-center gap-2">
-                                            {isEditing ? (
-                                                <>
-                                                    <button onClick={handleSaveEdit} className="p-2 text-amber-600 hover:bg-amber-600/10 rounded-lg transition-colors">
-                                                        <Save size={16} />
-                                                    </button>
-                                                    <button onClick={handleCancelEdit} className="p-2 text-stone-500 hover:bg-stone-800 rounded-lg transition-colors">
-                                                        <X size={16} />
-                                                    </button>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <button onClick={() => handleEdit(product)} className="p-2 text-stone-500 hover:text-stone-100 hover:bg-stone-800 rounded-lg transition-colors">
-                                                        <Edit3 size={16} />
-                                                    </button>
-                                                    <button onClick={() => handleDelete(product.id)} className="p-2 text-stone-500 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-colors">
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </>
-                                            )}
+                    if (isEditing) {
+                        return (
+                            <div key={product.id} className="rounded-2xl bg-stone-800 border border-amber-600/30 p-6 shadow-xl relative">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="text-xs text-stone-500 block mb-1">Nombre</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.name}
+                                            onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                            className="w-full px-4 py-2 bg-stone-900 border border-stone-700 rounded-lg text-stone-50 focus:border-amber-600 outline-none mb-4"
+                                        />
+                                        <label className="text-xs text-stone-500 block mb-1">PVP</label>
+                                        <input
+                                            type="number"
+                                            value={editForm.defaultPvp}
+                                            onChange={(e) => setEditForm({ ...editForm, defaultPvp: Number(e.target.value) })}
+                                            className="w-full px-4 py-2 bg-stone-900 border border-stone-700 rounded-lg text-emerald-400 font-bold focus:border-amber-600 outline-none"
+                                        />
+                                    </div>
+                                    <div className="bg-stone-900/50 rounded-xl p-4 border border-stone-700">
+                                        <h4 className="text-sm font-bold text-stone-400 mb-3 uppercase tracking-wider">Costos</h4>
+                                        <div className="space-y-2">
+                                            {editForm.costs?.map((cost, index) => (
+                                                <div key={index} className="flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={cost.name}
+                                                        onChange={(e) => updateEditCost(index, 'name', e.target.value)}
+                                                        className="flex-1 px-2 py-1 bg-stone-800 border border-stone-700 rounded text-stone-300 text-sm"
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        value={cost.value}
+                                                        onChange={(e) => updateEditCost(index, 'value', Number(e.target.value))}
+                                                        className="w-24 px-2 py-1 bg-stone-800 border border-stone-700 rounded text-stone-300 text-right text-sm"
+                                                    />
+                                                    <button onClick={() => removeEditCostRow(index)} className="text-stone-600 hover:text-red-400"><X size={14} /></button>
+                                                </div>
+                                            ))}
                                         </div>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
+                                        <button onClick={addEditCostRow} className="mt-2 text-xs text-amber-600 hover:text-amber-500 flex items-center gap-1">+ Agregar fila</button>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2 justify-end mt-4">
+                                    <button onClick={handleSaveEdit} className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-500">Guardar</button>
+                                    <button onClick={handleCancelEdit} className="px-4 py-2 bg-stone-700 text-stone-300 rounded-lg hover:bg-stone-600">Cancelar</button>
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <div key={product.id} className="rounded-xl bg-stone-800/50 border border-stone-700 hover:border-stone-600 p-4 flex items-center justify-between transition-colors">
+                            <div className="flex-1">
+                                <h3 className="text-lg font-bold text-stone-50 font-serif">{product.name}</h3>
+                                <div className="text-xs text-stone-500 mt-1 flex flex-wrap gap-2">
+                                    {(data.costs || []).slice(0, 3).map((c, i) => (
+                                        <span key={i} className="bg-stone-900 px-2 py-0.5 rounded border border-stone-800">{c.name}: {formatCOP(c.value)}</span>
+                                    ))}
+                                    {(data.costs || []).length > 3 && <span>+{data.costs.length - 3} más</span>}
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-6 px-4 border-l border-stone-700/50 mx-4">
+                                <div className="text-right">
+                                    <p className="text-xs text-stone-500 uppercase">Costo Total</p>
+                                    <p className="font-mono text-stone-300">{formatCOP(result.unitProdCost)}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xs text-stone-500 uppercase">PVP</p>
+                                    <p className="font-mono text-stone-50 font-bold">{formatCOP(data.defaultPvp)}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xs text-stone-500 uppercase">Margen</p>
+                                    <p className={`font-mono font-bold ${result.netMarginPercent > 30 ? 'text-emerald-500' : 'text-amber-500'}`}>
+                                        {result.netMarginPercent.toFixed(1)}%
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => handleEdit(product)} className="p-2 text-stone-500 hover:text-stone-100 hover:bg-stone-700 rounded-lg">
+                                    <Edit3 size={18} />
+                                </button>
+                                <button onClick={() => handleDelete(product.id)} className="p-2 text-stone-500 hover:text-red-400 hover:bg-red-900/20 rounded-lg">
+                                    <Trash2 size={18} />
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

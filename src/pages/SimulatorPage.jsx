@@ -8,9 +8,8 @@ import {
     Truck,
     Percent,
     Package,
-    Scissors,
-    Paintbrush,
-    Box
+    Plus,
+    X
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { getProducts, saveQuote, formatCOP, formatPercent } from '../utils/storage';
@@ -22,11 +21,8 @@ const SimulatorPage = ({ initialProductId }) => {
     const [selectedProductId, setSelectedProductId] = useState(initialProductId || products[0]?.id);
     const [quantity, setQuantity] = useState(50);
 
-    // All costs are now fully editable
-    const [fabricCost, setFabricCost] = useState(0);
-    const [confectionCost, setConfectionCost] = useState(0);
-    const [printCost, setPrintCost] = useState(0);
-    const [packagingCost, setPackagingCost] = useState(2500);
+    // Dynamic Costs State
+    const [dynamicCosts, setDynamicCosts] = useState([]);
     const [pvp, setPvp] = useState(0);
 
     // What If variables
@@ -40,38 +36,53 @@ const SimulatorPage = ({ initialProductId }) => {
     // Load product defaults when selection changes
     useEffect(() => {
         if (selectedProduct) {
-            setFabricCost(selectedProduct.fabricCost);
-            setConfectionCost(selectedProduct.confectionCost);
-            setPrintCost(selectedProduct.defaultPrintCost);
-            setPackagingCost(selectedProduct.packagingCost);
             setPvp(selectedProduct.defaultPvp);
+
+            // Deep copy costs to allow local simulation edits
+            let initialCosts = [];
+            if (selectedProduct.costs) {
+                initialCosts = selectedProduct.costs.map(c => ({ ...c }));
+            } else {
+                // Legacy fallback
+                initialCosts = [
+                    { id: 'l1', name: 'Tela', value: selectedProduct.fabricCost || 0 },
+                    { id: 'l2', name: 'Confección', value: selectedProduct.confectionCost || 0 },
+                    { id: 'l3', name: 'Estampado', value: selectedProduct.defaultPrintCost || 0 },
+                    { id: 'l4', name: 'Empaque', value: selectedProduct.packagingCost || 0 },
+                ];
+            }
+            setDynamicCosts(initialCosts);
         }
-    }, [selectedProductId]);
+    }, [selectedProductId, products]); // Listen to products to ensure loaded
 
     const results = useMemo(() => {
         return calculateFinancials({
             quantity,
-            fabricCost,
-            confectionCost,
-            printingCost: printCost,
-            packagingCost,
+            costs: dynamicCosts,
             pvp,
             extraShipping,
             discount,
         });
-    }, [quantity, fabricCost, confectionCost, printCost, packagingCost, pvp, extraShipping, discount]);
+    }, [quantity, dynamicCosts, pvp, extraShipping, discount]);
 
     const handleReset = () => {
         if (selectedProduct) {
-            setFabricCost(selectedProduct.fabricCost);
-            setConfectionCost(selectedProduct.confectionCost);
-            setPrintCost(selectedProduct.defaultPrintCost);
-            setPackagingCost(selectedProduct.packagingCost);
             setPvp(selectedProduct.defaultPvp);
             setQuantity(50);
             setExtraShipping(0);
             setDiscount(0);
+            let initialCosts = [];
+            if (selectedProduct.costs) {
+                initialCosts = selectedProduct.costs.map(c => ({ ...c }));
+            }
+            setDynamicCosts(initialCosts);
         }
+    };
+
+    const handleCostChange = (index, value) => {
+        const updated = [...dynamicCosts];
+        updated[index] = { ...updated[index], value: Number(value) };
+        setDynamicCosts(updated);
     };
 
     const handleSaveQuote = () => {
@@ -83,12 +94,6 @@ const SimulatorPage = ({ initialProductId }) => {
             productName: selectedProduct?.name || 'Custom',
             quantity,
             pvp,
-            fabricCost,
-            confectionCost,
-            printCost,
-            packagingCost,
-            extraShipping,
-            discount,
             totalProfit: results.totalProfit,
             netMarginPercent: results.netMarginPercent,
             breakEvenUnits: results.breakEvenUnits,
@@ -97,24 +102,6 @@ const SimulatorPage = ({ initialProductId }) => {
 
         setTimeout(() => setIsSaving(false), 1500);
     };
-
-    const InputField = ({ label, value, onChange, icon: Icon, prefix = '$', color = 'white' }) => (
-        <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-stone-500 uppercase tracking-wider flex items-center gap-2">
-                {Icon && <Icon size={14} className="text-stone-400" />}
-                {label}
-            </label>
-            <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-500 text-sm">{prefix}</span>
-                <input
-                    type="number"
-                    value={value}
-                    onChange={(e) => onChange(Number(e.target.value))}
-                    className="w-full pl-8 pr-4 py-3 bg-stone-900 border border-stone-800 rounded-xl text-stone-50 text-right font-medium focus:outline-none focus:border-amber-600 transition-colors"
-                />
-            </div>
-        </div>
-    );
 
     if (products.length === 0) {
         return (
@@ -167,7 +154,7 @@ const SimulatorPage = ({ initialProductId }) => {
 
                         <div className="grid grid-cols-2 gap-4 mb-4">
                             <div className="col-span-2">
-                                <label className="text-xs font-medium text-stone-500 uppercase tracking-wider block mb-2">Plantilla</label>
+                                <label className="text-xs font-medium text-stone-500 uppercase tracking-wider block mb-2">Seleccionar Producto</label>
                                 <select
                                     value={selectedProductId}
                                     onChange={(e) => setSelectedProductId(Number(e.target.value))}
@@ -179,58 +166,61 @@ const SimulatorPage = ({ initialProductId }) => {
                                 </select>
                             </div>
 
-                            <InputField
-                                label="Cantidad"
-                                value={quantity}
-                                onChange={setQuantity}
-                                icon={Package}
-                                prefix=""
-                            />
+                            <div className="flex flex-col gap-2">
+                                <label className="text-xs font-medium text-stone-500 uppercase tracking-wider flex items-center gap-2">
+                                    <Package size={14} className="text-stone-400" />
+                                    Cantidad
+                                </label>
+                                <input
+                                    type="number"
+                                    value={quantity}
+                                    onChange={(e) => setQuantity(Number(e.target.value))}
+                                    className="w-full px-4 py-3 bg-stone-900 border border-stone-800 rounded-xl text-stone-50 text-right font-medium focus:outline-none focus:border-amber-600 transition-colors"
+                                />
+                            </div>
 
-                            <InputField
-                                label="PVP (Precio Venta)"
-                                value={pvp}
-                                onChange={setPvp}
-                                icon={DollarSign}
-                                color="emerald-400"
-                            />
+                            <div className="flex flex-col gap-2">
+                                <label className="text-xs font-medium text-stone-500 uppercase tracking-wider flex items-center gap-2">
+                                    <DollarSign size={14} className="text-emerald-400" />
+                                    PVP Unitario
+                                </label>
+                                <input
+                                    type="number"
+                                    value={pvp}
+                                    onChange={(e) => setPvp(Number(e.target.value))}
+                                    className="w-full px-4 py-3 bg-stone-900 border border-stone-800 rounded-xl text-stone-50 text-right font-medium focus:outline-none focus:border-amber-600 transition-colors"
+                                />
+                            </div>
                         </div>
                     </div>
 
-                    {/* Production Costs - All Editable */}
+                    {/* Production Costs - Dynamic List */}
                     <div className="bg-stone-800/20 border border-stone-800 rounded-2xl p-6 backdrop-blur-sm">
-                        <h3 className="text-sm font-bold text-stone-50 uppercase tracking-wider mb-4 font-serif">Costos de Producción</h3>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-sm font-bold text-stone-50 uppercase tracking-wider font-serif">Costos de Producción</h3>
+                            <span className="text-xs text-stone-500">Editables para esta simulación</span>
+                        </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <InputField
-                                label="Tela"
-                                value={fabricCost}
-                                onChange={setFabricCost}
-                                icon={Scissors}
-                            />
-                            <InputField
-                                label="Confección"
-                                value={confectionCost}
-                                onChange={setConfectionCost}
-                                icon={Package}
-                            />
-                            <InputField
-                                label="Estampado"
-                                value={printCost}
-                                onChange={setPrintCost}
-                                icon={Paintbrush}
-                            />
-                            <InputField
-                                label="Empaque"
-                                value={packagingCost}
-                                onChange={setPackagingCost}
-                                icon={Box}
-                            />
+                        <div className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+                            {dynamicCosts.map((cost, index) => (
+                                <div key={index} className="flex flex-col gap-1">
+                                    <label className="text-xs font-medium text-stone-500">{cost.name}</label>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-600 text-sm">$</span>
+                                        <input
+                                            type="number"
+                                            value={cost.value}
+                                            onChange={(e) => handleCostChange(index, e.target.value)}
+                                            className="w-full pl-8 pr-4 py-2 bg-stone-900 border border-stone-800 rounded-lg text-stone-50 text-right font-medium focus:outline-none focus:border-amber-600 transition-colors"
+                                        />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
 
                         <div className="mt-4 pt-4 border-t border-stone-800 flex justify-between items-center">
                             <span className="text-sm text-stone-400">Costo Unitario Base</span>
-                            <span className="text-lg font-bold text-stone-50">{formatCOP(fabricCost + confectionCost + printCost + packagingCost)}</span>
+                            <span className="text-lg font-bold text-stone-50">{formatCOP(results.unitProdCost)}</span>
                         </div>
                     </div>
 
@@ -275,7 +265,7 @@ const SimulatorPage = ({ initialProductId }) => {
                 <div className="col-span-12 lg:col-span-7 space-y-6">
                     {/* Key Metrics Grid */}
                     <div className="grid grid-cols-2 gap-4">
-                        {/* Net Margin - Large Card */}
+                        {/* Net Margin */}
                         <div className={`bg-gradient-to-br ${results?.netMarginPercent > 30 ? 'from-emerald-900/20 to-emerald-900/5 border-emerald-900/30' : results?.netMarginPercent > 15 ? 'from-amber-900/20 to-amber-900/5 border-amber-900/30' : 'from-red-900/20 to-red-900/5 border-red-900/30'} border rounded-2xl p-6 shadow-xl`}>
                             <div className="flex items-center gap-2 mb-2">
                                 <TrendingUp size={16} className={results?.netMarginPercent > 30 ? 'text-emerald-500' : results?.netMarginPercent > 15 ? 'text-amber-500' : 'text-red-500'} />
@@ -362,7 +352,7 @@ const SimulatorPage = ({ initialProductId }) => {
                                 </ResponsiveContainer>
                             </div>
 
-                            <div className="flex-1 space-y-2">
+                            <div className="flex-1 space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                                 {(results?.breakdown || []).map((item, i) => (
                                     <div key={i} className="flex items-center justify-between py-2 border-b border-stone-800 last:border-0">
                                         <div className="flex items-center gap-3">
@@ -372,28 +362,7 @@ const SimulatorPage = ({ initialProductId }) => {
                                         <span className="font-medium text-stone-50">{formatCOP(item.value)}</span>
                                     </div>
                                 ))}
-
-                                <div className="pt-3 mt-2 border-t border-stone-700 flex items-center justify-between">
-                                    <span className="text-sm font-medium text-stone-300">PVP Efectivo</span>
-                                    <span className="text-lg font-bold text-stone-50">{formatCOP(results?.effectivePvp || 0)}</span>
-                                </div>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Summary Row */}
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="bg-stone-800/30 border border-stone-800 rounded-xl p-4">
-                            <p className="text-xs text-stone-500 uppercase tracking-wider mb-1">Inversión Total</p>
-                            <p className="text-xl font-bold text-stone-50">{formatCOP(results?.totalProductionCost || 0)}</p>
-                        </div>
-                        <div className="bg-stone-800/30 border border-stone-800 rounded-xl p-4">
-                            <p className="text-xs text-stone-500 uppercase tracking-wider mb-1">Costo x Unidad</p>
-                            <p className="text-xl font-bold text-stone-50">{formatCOP(results?.unitCostReal || 0)}</p>
-                        </div>
-                        <div className="bg-stone-800/30 border border-stone-800 rounded-xl p-4">
-                            <p className="text-xs text-stone-500 uppercase tracking-wider mb-1">Margen Bruto</p>
-                            <p className="text-xl font-bold text-stone-50">{formatPercent(results?.grossMarginPercent || 0)}</p>
                         </div>
                     </div>
                 </div>

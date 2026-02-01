@@ -4,14 +4,12 @@ import {
     Package,
     Calculator,
     FileText,
-    TrendingUp,
-    Tags
+    TrendingUp
 } from 'lucide-react';
 
 const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'products', label: 'Productos', icon: Package },
-    { id: 'categories', label: 'Categorías', icon: Tags },
     { id: 'simulator', label: 'Simulador', icon: Calculator },
     { id: 'quotes', label: 'Cotizaciones', icon: FileText },
 ];

@@ -1,82 +1,61 @@
 // Storage utilities for ORVANN-Intel
 const STORAGE_KEYS = {
     PRODUCTS: 'orvann_products',
-    CATEGORIES: 'orvann_categories',
     QUOTES: 'orvann_quotes',
     SETTINGS: 'orvann_settings',
 };
 
-export const defaultCategories = [
-    {
-        id: 1,
-        name: "Hoodie Heavyweight",
-        fabricCost: 35000,
-        confectionCost: 15000,
-        printCost: 8000,
-        packagingCost: 2500,
-        suggestedPvp: 145000,
-    },
-    {
-        id: 2,
-        name: "Camiseta Premium",
-        fabricCost: 12000,
-        confectionCost: 8000,
-        printCost: 5000,
-        packagingCost: 2500,
-        suggestedPvp: 85000,
-    },
-    {
-        id: 3,
-        name: "Cargo Pants",
-        fabricCost: 28000,
-        confectionCost: 18000,
-        printCost: 0,
-        packagingCost: 2500,
-        suggestedPvp: 135000,
-    },
-];
-
-// Default products with full cost structure
+// Default products with Dynamic Cost Structure
 export const defaultProducts = [
     {
         id: 1,
         name: "Oversize Hoodie",
-        category: "Hoodies",
-        fabricCost: 35000,
-        confectionCost: 15000,
-        defaultPrintCost: 8000,
-        packagingCost: 2500,
+        costs: [
+            { id: 1, name: "Tela Heavyweight", value: 35000 },
+            { id: 2, name: "Confección Premium", value: 15000 },
+            { id: 3, name: "Estampado DTG", value: 8000 },
+            { id: 4, name: "Empaque", value: 2500 }
+        ],
         defaultPvp: 145000,
         createdAt: new Date().toISOString(),
     },
     {
         id: 2,
         name: "Premium Tee",
-        category: "Camisetas",
-        fabricCost: 12000,
-        confectionCost: 8000,
-        defaultPrintCost: 5000,
-        packagingCost: 2500,
+        costs: [
+            { id: 1, name: "Tela Algodón", value: 12000 },
+            { id: 2, name: "Confección", value: 8000 },
+            { id: 3, name: "Estampado", value: 5000 },
+            { id: 4, name: "Empaque", value: 2500 }
+        ],
         defaultPvp: 85000,
         createdAt: new Date().toISOString(),
-    },
-    {
-        id: 3,
-        name: "Cargo Pants",
-        category: "Pants",
-        fabricCost: 28000,
-        confectionCost: 18000,
-        defaultPrintCost: 0,
-        packagingCost: 2500,
-        defaultPvp: 135000,
-        createdAt: new Date().toISOString(),
-    },
+    }
 ];
 
 // Products CRUD
 export const getProducts = () => {
     const saved = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
-    return saved ? JSON.parse(saved) : defaultProducts;
+    let products = saved ? JSON.parse(saved) : defaultProducts;
+
+    // Migration: Check if old structure exists and convert
+    products = products.map(p => {
+        if (!p.costs && (p.fabricCost || p.confectionCost)) {
+            // Convert legacy to new format
+            return {
+                ...p,
+                costs: [
+                    { id: '1-migrated', name: 'Tela', value: p.fabricCost || 0 },
+                    { id: '2-migrated', name: 'Confección', value: p.confectionCost || 0 },
+                    { id: '3-migrated', name: 'Estampado', value: p.defaultPrintCost || 0 },
+                    { id: '4-migrated', name: 'Empaque', value: p.packagingCost || 0 }
+                ]
+            };
+        }
+        return p;
+    });
+
+    return products;
 };
 
 export const saveProducts = (products) => {
@@ -105,40 +84,6 @@ export const deleteProduct = (id) => {
     const products = getProducts();
     const filtered = products.filter(p => p.id !== id);
     saveProducts(filtered);
-    return filtered;
-};
-
-// Categories CRUD (Templates)
-export const getCategories = () => {
-    const saved = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
-    return saved ? JSON.parse(saved) : defaultCategories;
-};
-
-export const saveCategories = (categories) => {
-    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
-};
-
-export const addCategory = (category) => {
-    const categories = getCategories();
-    const newCat = {
-        ...category,
-        id: Date.now(),
-    };
-    saveCategories([...categories, newCat]);
-    return newCat;
-};
-
-export const updateCategory = (id, updates) => {
-    const categories = getCategories();
-    const updated = categories.map(c => c.id === id ? { ...c, ...updates } : c);
-    saveCategories(updated);
-    return updated;
-};
-
-export const deleteCategory = (id) => {
-    const categories = getCategories();
-    const filtered = categories.filter(c => c.id !== id);
-    saveCategories(filtered);
     return filtered;
 };
 
