@@ -3,7 +3,37 @@ const STORAGE_KEYS = {
     PRODUCTS: 'orvann_products',
     QUOTES: 'orvann_quotes',
     SETTINGS: 'orvann_settings',
+    COSTS: 'orvann_fixed_costs',
+    DEBTS: 'orvann_debts',
 };
+
+// --- Financial Data Helpers ---
+
+export const getFixedCosts = () => {
+    const data = localStorage.getItem(STORAGE_KEYS.COSTS);
+    return data ? JSON.parse(data) : [
+        { id: 1, name: 'Arriendo', value: 1200000 },
+        { id: 2, name: 'Servicios', value: 200000 },
+        { id: 3, name: 'Nómina Base', value: 0 },
+        { id: 4, name: 'Marketing', value: 500000 },
+    ];
+};
+
+export const saveFixedCosts = (costs) => {
+    localStorage.setItem(STORAGE_KEYS.COSTS, JSON.stringify(costs));
+    window.dispatchEvent(new Event('storage-update'));
+};
+
+export const getDebts = () => {
+    const data = localStorage.getItem(STORAGE_KEYS.DEBTS);
+    return data ? JSON.parse(data) : [];
+};
+
+export const saveDebts = (debts) => {
+    localStorage.setItem(STORAGE_KEYS.DEBTS, JSON.stringify(debts));
+    window.dispatchEvent(new Event('storage-update'));
+};
+
 
 // Default products with Dynamic Cost Structure
 export const defaultProducts = [

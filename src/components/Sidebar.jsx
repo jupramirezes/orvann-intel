@@ -4,12 +4,14 @@ import {
     Package,
     Calculator,
     FileText,
-    TrendingUp
+    TrendingUp,
+    DollarSign // Added
 } from 'lucide-react';
 
 const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'products', label: 'Productos', icon: Package },
+    { id: 'finance', label: 'Finanzas', icon: DollarSign }, // Added
     { id: 'simulator', label: 'Simulador', icon: Calculator },
     { id: 'quotes', label: 'Cotizaciones', icon: FileText },
 ];

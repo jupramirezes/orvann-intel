@@ -8,7 +8,7 @@ import {
     Zap
 } from 'lucide-react';
 import StatCard from '../components/StatCard';
-import { getProducts, getQuotes, formatCOP, formatPercent } from '../utils/storage';
+import { getProducts, getQuotes, getFixedCosts, formatCOP, formatPercent } from '../utils/storage';
 import { calculateFinancials } from '../utils/calculator';
 
 const DashboardPage = ({ onNavigate }) => {
@@ -65,6 +65,35 @@ const DashboardPage = ({ onNavigate }) => {
                     Nueva Simulación
                 </button>
             </div>
+
+            {/* Global Financial Status */}
+            {(() => {
+                const fixedCosts = getFixedCosts().reduce((sum, c) => sum + (c.value || 0), 0);
+                const avgTicket = 120000;
+                const margin = stats?.avgMargin || 0.4;
+                const breakEven = margin > 0 ? Math.ceil(fixedCosts / (avgTicket * margin)) : 0;
+
+                return (
+                    <div className="bg-gradient-to-r from-stone-900 to-stone-950 border border-amber-900/30 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-amber-500/10 rounded-full text-amber-500">
+                                <Target size={24} />
+                            </div>
+                            <div>
+                                <h3 className="text-stone-200 font-serif font-bold text-lg">Objetivo de Supervivencia</h3>
+                                <p className="text-stone-500 text-sm">Basado en costos fijos de {formatCOP(fixedCosts)}</p>
+                            </div>
+                        </div>
+                        <div className="text-center md:text-right">
+                            <span className="block text-3xl font-bold text-amber-500">{breakEven} <span className="text-sm font-normal text-stone-500">prendas/mes</span></span>
+                            <span className="text-xs text-stone-600">Punto de equilibrio global</span>
+                        </div>
+                        <button onClick={() => onNavigate('finance')} className="text-sm text-stone-400 hover:text-white underline">
+                            Ver detalles financieros
+                        </button>
+                    </div>
+                );
+            })()}
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
