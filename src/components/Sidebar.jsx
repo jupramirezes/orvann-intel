@@ -6,8 +6,8 @@ import {
     FileText,
     TrendingUp,
     DollarSign,
-    Sparkles, // Added
-    ShieldCheck // Added
+    Sparkles,
+    Settings
 } from 'lucide-react';
 
 const navItems = [
@@ -18,7 +18,7 @@ const navItems = [
     { id: 'quotes', label: 'Cotizaciones', icon: FileText },
     { type: 'divider' },
     { id: 'finance', label: 'Finanzas & Negocio', icon: DollarSign },
-    { id: 'settings', label: 'Datos & Seguridad', icon: ShieldCheck }, // Added
+    { id: 'settings', label: 'Datos & Seguridad', icon: Settings },
 ];
 
 const Sidebar = ({ currentPage, onNavigate }) => {
